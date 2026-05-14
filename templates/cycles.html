@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="panel-card">
+      <div class="kicker">Ciclos de avaliação</div>
+      <h4 class="mb-3">Criar novo ciclo</h4>
+      <form method="post" class="row g-3">
+        <div class="col-12"><label class="form-label">Nome do ciclo</label><input class="form-control" name="name" placeholder="Ex.: Ciclo 2026.2" required></div>
+        <div class="col-md-6"><label class="form-label">Início</label><input type="date" class="form-control" name="start_date" required></div>
+        <div class="col-md-6"><label class="form-label">Fim</label><input type="date" class="form-control" name="end_date" required></div>
+        <div class="col-12">
+          <label class="form-label">Status</label>
+          <select class="form-select" name="status">
+            <option value="draft">Rascunho</option>
+            <option value="active">Ativo</option>
+            <option value="closed">Encerrado</option>
+          </select>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Colaboradores incluídos</label>
+          <div class="selection-list">
+            {% for employee in employees %}
+              <label class="selection-item">
+                <input type="checkbox" name="employee_{{ employee.id }}" checked>
+                <span>{{ employee.name }} <small class="subtle">— {{ employee.unit }} • {{ employee.department }}</small></span>
+              </label>
+            {% else %}
+              <div class="subtle small">Cadastre colaboradores ativos antes de criar um ciclo.</div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="col-12 text-end"><button class="btn btn-brand">Criar ciclo</button></div>
+      </form>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="panel-card">
+      <div class="kicker">Histórico</div>
+      <h4 class="mb-3">Ciclos cadastrados</h4>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead><tr><th>Nome</th><th>Período</th><th>Status</th><th>Participantes</th></tr></thead>
+          <tbody>
+            {% for cycle in cycles %}
+              <tr>
+                <td><strong>{{ cycle.name }}</strong></td>
+                <td>{{ cycle.start_date.strftime('%d/%m/%Y') }} a {{ cycle.end_date.strftime('%d/%m/%Y') }}</td>
+                <td>
+                  {% if cycle.status == 'active' %}<span class="score-pill score-high">Ativo</span>
+                  {% elif cycle.status == 'closed' %}<span class="score-pill score-mid">Encerrado</span>
+                  {% else %}<span class="score-pill score-low">Rascunho</span>{% endif %}
+                </td>
+                <td>{{ cycle.assignments|length }}</td>
+              </tr>
+            {% else %}
+              <tr><td colspan="4" class="text-center subtle py-4">Nenhum ciclo criado.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row g-4 mb-4">
+  <div class="col-lg-8">
+    <div class="panel-card h-100">
+      <div class="kicker">Consolidação final</div>
+      <h3 class="mb-1">Feedback de {{ assignment.employee.name }}</h3>
+      <div class="subtle">Ciclo {{ assignment.cycle.name }} • {{ assignment.employee.position }} • {{ assignment.employee.unit }}</div>
+      <div class="row g-3 mt-3">
+        <div class="col-md-4"><div class="metric-card"><div class="metric-label">Autoavaliação</div><div class="metric-value">{{ summary.employee_avg }}</div></div></div>
+        <div class="col-md-4"><div class="metric-card"><div class="metric-label">Gestor</div><div class="metric-value">{{ summary.manager_avg }}</div></div></div>
+        <div class="col-md-4"><div class="metric-card"><div class="metric-label">Média final</div><div class="metric-value">{{ summary.final_avg }}</div><span class="metric-badge">{{ feedback.profile_label }}</span></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="panel-card h-100 d-flex flex-column justify-content-between">
+      <div>
+        <div class="kicker">Ações</div>
+        <h5>Exportar e regenerar</h5>
+        <p class="subtle small mb-3">Baixe o relatório completo em PDF ou regenere o feedback automático a partir das notas atuais.</p>
+      </div>
+      <div class="d-grid gap-2">
+        <a href="{{ url_for('report_pdf', assignment_id=assignment.id) }}" class="btn btn-accent">📄 Baixar PDF</a>
+        <a href="{{ url_for('feedback_regenerate', assignment_id=assignment.id) }}" class="btn btn-outline-secondary">↻ Regenerar automático</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="panel-card mb-4">
+  <div class="kicker">Comparativo por competência</div>
+  <h5 class="mb-3">Visão 180° detalhada</h5>
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead><tr><th>Categoria</th><th>Pergunta</th><th>Auto</th><th>Gestor</th><th>Final</th></tr></thead>
+      <tbody>
+        {% for row in summary.rows %}
+          <tr>
+            <td><strong>{{ row.question.category }}</strong></td>
+            <td>{{ row.question.text }}</td>
+            <td>{{ row.employee.score if row.employee else '-' }}</td>
+            <td>{{ row.manager.score if row.manager else '-' }}</td>
+            <td>
+              {% if row.final_score is not none %}
+                {% if row.final_score >= 4 %}<span class="score-pill score-high">{{ row.final_score }}</span>
+                {% elif row.final_score >= 3 %}<span class="score-pill score-mid">{{ row.final_score }}</span>
+                {% else %}<span class="score-pill score-low">{{ row.final_score }}</span>{% endif %}
+              {% else %}-{% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<form method="post">
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="panel-card h-100">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div>
+            <div class="kicker">Feedback automático</div>
+            <h5 class="mb-0">Feedback consolidado (editável)</h5>
+          </div>
+        </div>
+        <p class="subtle small">Texto gerado automaticamente com base nas avaliações. Edite livremente antes de exportar.</p>
+        <textarea class="form-control large-box" name="editable_feedback" required>{{ feedback.editable_feedback }}</textarea>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="panel-card h-100">
+        <div class="kicker">PDI</div>
+        <h5 class="mb-1">Plano de Desenvolvimento Individual (editável)</h5>
+        <p class="subtle small">Construído a partir das competências com menores notas. Personalize ações, prazos e indicadores.</p>
+        <textarea class="form-control large-box" name="editable_pdi" required>{{ feedback.editable_pdi }}</textarea>
+      </div>
+    </div>
+    <div class="col-12">
+      <div class="panel-card">
+        <div class="kicker">Comentários do gestor</div>
+        <label class="form-label">Comentários adicionais (livres)</label>
+        <textarea class="form-control" name="manager_comments" rows="3">{{ feedback.manager_comments }}</textarea>
+      </div>
+    </div>
+    <div class="col-12 text-end">
+      <a href="{{ url_for('manager_dashboard') }}" class="btn btn-outline-secondary">Voltar ao dashboard</a>
+      <button class="btn btn-brand">💾 Salvar feedback e PDI</button>
+    </div>
+  </div>
+</form>
+{% endblock %}

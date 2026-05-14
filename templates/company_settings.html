@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="panel-card">
+  <div class="kicker">Configurações</div>
+  <h3 class="mb-1">Identidade da empresa</h3>
+  <p class="subtle">Personalize nome, missão, valores e cores que aparecem em todo o sistema e no PDF.</p>
+  <form method="post" class="row g-4 mt-1">
+    <div class="col-md-6"><label class="form-label">Nome da empresa</label><input class="form-control" name="name" value="{{ brand.name }}" required></div>
+    <div class="col-md-3"><label class="form-label">Cor primária</label><input type="color" class="form-control form-control-color" name="primary_color" value="{{ brand.primary_color }}"></div>
+    <div class="col-md-3"><label class="form-label">Cor secundária</label><input type="color" class="form-control form-control-color" name="secondary_color" value="{{ brand.secondary_color }}"></div>
+    <div class="col-12"><label class="form-label">Missão</label><textarea class="form-control" name="mission">{{ brand.mission }}</textarea></div>
+    <div class="col-12"><label class="form-label">Valores (1 por linha)</label><textarea class="form-control" name="values">{{ brand.values }}</textarea></div>
+    <div class="col-12 text-end"><button class="btn btn-brand">💾 Salvar configurações</button></div>
+  </form>
+</div>
+{% endblock %}

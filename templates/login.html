@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block auth_content %}
+<div class="login-page d-flex align-items-center justify-content-center">
+  <div class="login-card row g-0 shadow-lg overflow-hidden">
+    <div class="col-lg-6 p-5 hero-pane">
+      <div class="badge rounded-pill text-bg-light mb-3">Sistema de RH 180°</div>
+      <h1 class="display-6 fw-bold">Posto do Boi & Express do Boi</h1>
+      <p class="lead mt-3">Avaliação de desempenho 180°, feedback automático, PDI e relatórios em PDF — tudo em um só lugar.</p>
+      <ul class="list-unstyled mt-4 hero-list">
+        <li><i class="bi bi-check2-circle"></i> Cadastro completo de colaboradores</li>
+        <li><i class="bi bi-check2-circle"></i> Avaliação do gestor + autoavaliação</li>
+        <li><i class="bi bi-check2-circle"></i> Resultados automáticos e dashboard</li>
+        <li><i class="bi bi-check2-circle"></i> Feedback editável e PDI robusto</li>
+        <li><i class="bi bi-check2-circle"></i> Exportação de relatórios em PDF</li>
+      </ul>
+      <div class="demo-box mt-4">
+        <div class="fw-semibold mb-1">Acessos de demonstração</div>
+        <div><strong>Gestor:</strong> gestor@postodoboi.com / 123456</div>
+        <div><strong>Colaborador:</strong> ana@postodoboi.com / 123456</div>
+      </div>
+    </div>
+    <div class="col-lg-6 bg-white p-5">
+      <h3 class="mb-1">Acessar plataforma</h3>
+      <p class="subtle mb-4">Use seu e-mail corporativo para entrar.</p>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+      <form method="post" class="d-grid gap-3">
+        <div>
+          <label class="form-label">E-mail</label>
+          <input type="email" name="email" class="form-control form-control-lg" placeholder="seuemail@postodoboi.com" required>
+        </div>
+        <div>
+          <label class="form-label">Senha</label>
+          <input type="password" name="password" class="form-control form-control-lg" placeholder="••••••" required>
+        </div>
+        <button class="btn btn-brand btn-lg">Entrar</button>
+      </form>
+      <div class="text-center subtle small mt-4">© Posto do Boi e Express do Boi — RH 180°</div>
+    </div>
+  </div>
+</div>
+{% endblock %}
