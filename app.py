@@ -619,7 +619,49 @@ def toggle_employee(user_id):
     log_action('Alterou status do colaborador', 'user', user.id, f'Ativo={user.active}')
     flash('Status do colaborador atualizado.', 'info')
     return redirect(url_for('employees'))
+@app.route('/employees/<int:user_id>/edit', methods=['GET', 'POST'])
+@login_required(role='manager')
+def edit_employee(user_id):
+    user = User.query.get_or_404(user_id)
 
+    if user.role != 'employee':
+        flash('Somente colaboradores podem ser editados por aqui.', 'warning')
+        return redirect(url_for('employees'))
+
+    managers = User.query.filter_by(role='manager').order_by(User.name).all()
+
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+
+        email_exists = User.query.filter(User.email == email, User.id != user.id).first()
+        if email_exists:
+            flash('Já existe outro usuário com este e-mail.', 'danger')
+            return redirect(url_for('edit_employee', user_id=user.id))
+
+        user.name = request.form.get('name', '').strip()
+        user.email = email
+        user.department = request.form.get('department', '').strip()
+        user.position = request.form.get('position', '').strip()
+        user.unit = request.form.get('unit', '').strip()
+
+        manager_id = request.form.get('manager_id')
+        user.manager_id = int(manager_id) if manager_id else None
+
+        admission_date = request.form.get('admission_date')
+        if admission_date:
+            user.admission_date = datetime.strptime(admission_date, '%Y-%m-%d').date()
+        else:
+            user.admission_date = None
+
+        new_password = request.form.get('password', '').strip()
+        if new_password:
+            user.set_password(new_password)
+
+        db.session.commit()
+        flash('Colaborador atualizado com sucesso.', 'success')
+        return redirect(url_for('employees'))
+
+    return render_template('edit_employee.html', employee=user, managers=managers)
 
 @app.route('/questions', methods=['GET', 'POST'])
 @login_required(role='manager')
