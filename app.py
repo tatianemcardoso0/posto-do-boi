@@ -582,7 +582,10 @@ def company_settings():
         brand.values = request.form['values']
         brand.primary_color = request.form['primary_color']
         brand.secondary_color = request.form['secondary_color']
-        db.session.commit()
+        ok, err = safe_commit()
+if not ok:
+    flash(f'Erro ao atualizar empresa: {err}', 'danger')
+    return redirect(url_for('company_settings'))
         log_action('Atualizou dados da empresa', 'company', brand.id, brand.name)
         flash('Identidade da empresa atualizada.', 'success')
         return redirect(url_for('company_settings'))
@@ -608,9 +611,13 @@ def employees():
         )
         user.set_password(request.form.get('password') or '123456')
         db.session.add(user)
-        db.session.commit()
-        log_action('Cadastrou colaborador', 'user', user.id, user.name)
-        flash(f'Colaborador {user.name} cadastrado com sucesso.', 'success')
+ok, err = safe_commit()
+if not ok:
+    flash(f'Erro ao salvar colaborador: {err}', 'danger')
+    return redirect(url_for('employees'))
+
+log_action('Cadastrou colaborador', 'user', user.id, user.name)
+flash(f'Colaborador {user.name} cadastrado com sucesso.', 'success')
         return redirect(url_for('employees'))
     employees_list = User.query.filter_by(role='employee').order_by(User.name).all()
     return render_template('employees.html', employees=employees_list, managers=managers)
@@ -683,7 +690,10 @@ def questions():
             active=True,
         )
         db.session.add(question)
-        db.session.commit()
+ok, err = safe_commit()
+if not ok:
+    flash(f'Erro ao salvar pergunta: {err}', 'danger')
+    return redirect(url_for('questions'))
         log_action('Cadastrou pergunta', 'question', question.id, question.category)
         flash('Pergunta adicionada ao questionário.', 'success')
         return redirect(url_for('questions'))
@@ -750,7 +760,10 @@ def self_evaluation(assignment_id):
                     assignment_id=assignment.id, question_id=q.id,
                     evaluator_role='employee', score=score, comment=comment,
                 ))
-        db.session.commit()
+        ok, err = safe_commit()
+if not ok:
+    flash(f'Erro ao salvar autoavaliação: {err}', 'danger')
+    return redirect(url_for('self_evaluation', assignment_id=assignment.id))
         log_action('Concluiu autoavaliação', 'assignment', assignment.id, assignment.cycle.name)
         flash('Autoavaliação enviada com sucesso. O resultado consolidado fica disponível apenas para o gestor.', 'success')
         return redirect(url_for('employee_dashboard'))
@@ -775,9 +788,12 @@ def manager_evaluation(assignment_id):
                 db.session.add(Response(
                     assignment_id=assignment.id, question_id=q.id,
                     evaluator_role='manager', score=score, comment=comment,
-                ))
-        db.session.commit()
-        regenerate_feedback(assignment)
+                ))ok, err = safe_commit()
+if not ok:
+    flash(f'Erro ao salvar avaliação do gestor: {err}', 'danger')
+    return redirect(url_for('manager_evaluation', assignment_id=assignment.id))
+
+regenerate_feedback(assignment)
         log_action('Concluiu avaliação do gestor', 'assignment', assignment.id, assignment.employee.name)
         flash('Avaliação do gestor registrada e feedback automático gerado.', 'success')
         return redirect(url_for('feedback_view', assignment_id=assignment.id))
