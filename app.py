@@ -1330,7 +1330,6 @@ def seed_database():
     ]
     for category, text, expected in questions_seed:
         db.session.add(Question(category=category, text=text, expected_behavior=expected, active=True))
-
     cycle = EvaluationCycle(
         name='Ciclo 2026.1 - Posto do Boi / Express do Boi',
         start_date=date(2026, 5, 1),
@@ -1341,14 +1340,20 @@ def seed_database():
     db.session.flush()
 
     for emp in User.query.filter_by(role='employee').all():
-        db.session.add(Assignment(cycle_id=cycle.id, employee_id=emp.id, manager_id=manager.id))
+        db.session.add(Assignment(cycle_id=cycle.id, employee_id=emp.id, manager_id=emp.manager_id))
 
     db.session.commit()
 
 
-with app.app_context():
-    seed_database()
+# ==============================================================================
+# INICIALIZAÇÃO DO SERVIDOR
+# ==============================================================================
 
+with app.app_context():
+    db.create_all()  # Cria as tabelas se elas não existirem
+    # IMPORTANTE: Comentei a linha abaixo para que ela não limpe/sobrescreva 
+    # seus dados toda vez que o servidor reiniciar. Se precisar resetar o banco, remova o '#'
+    # seed_database()
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
