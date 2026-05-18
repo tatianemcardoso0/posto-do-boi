@@ -29,13 +29,17 @@ from reportlab.platypus import (
 )
 
 app = Flask(__name__)
+app.config[BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 INSTANCE_DIR = os.path.join(BASE_DIR, 'instance')
 os.makedirs(INSTANCE_DIR, exist_ok=True)
 
 DB_PATH = os.path.join(INSTANCE_DIR, 'postodoboi_rh.db')
 
+app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_PATH}'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = 'postodoboi-rh-secret'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'postodoboi-rh-secret'
 
@@ -398,6 +402,7 @@ def regenerate_feedback(assignment: Assignment):
 # GERAÇÃO DE GRÁFICOS PARA O PDF
 # =========================================================
 def generate_bar_chart(category_compare):
+    """Gráfico de barras horizontal comparando auto vs gestor por competência"""
     if not category_compare:
         return None
     fig, ax = plt.subplots(figsize=(7, max(3, len(category_compare) * 0.55)), dpi=120)
@@ -437,6 +442,7 @@ def generate_bar_chart(category_compare):
 
 
 def generate_radar_chart(category_compare):
+    """Gráfico de radar (teia de aranha)"""
     if len(category_compare) < 3:
         return None
     categories = [c['category'] for c in category_compare]
@@ -475,6 +481,7 @@ def generate_radar_chart(category_compare):
 
 
 def generate_history_chart(history, current_score):
+    """Gráfico de evolução histórica do colaborador"""
     if not history:
         return None
     all_data = list(reversed(history)) + [{'cycle': 'Ciclo atual', 'final_avg': current_score}]
@@ -591,6 +598,9 @@ def company_settings():
         brand.secondary_color = request.form['secondary_color']
         
         ok, err = safe_commit()
+if not ok:
+    flash(f'Erro ao atualizar empresa: {err}', 'danger')
+    return redirect(url_for('company_settings'))
         if not ok:
             flash(f'Erro ao atualizar empresa: {err}', 'danger')
             return redirect(url_for('company_settings'))
@@ -620,12 +630,18 @@ def employees():
         )
         user.set_password(request.form.get('password') or '123456')
         db.session.add(user)
+ok, err = safe_commit()
+if not ok:
+    flash(f'Erro ao salvar colaborador: {err}', 'danger')
+    return redirect(url_for('employees'))
         
         ok, err = safe_commit()
         if not ok:
             flash(f'Erro ao salvar colaborador: {err}', 'danger')
             return redirect(url_for('employees'))
 
+log_action('Cadastrou colaborador', 'user', user.id, user.name)
+flash(f'Colaborador {user.name} cadastrado com sucesso.', 'success')
         log_action('Cadastrou colaborador', 'user', user.id, user.name)
         flash(f'Colaborador {user.name} cadastrado com sucesso.', 'success')
         return redirect(url_for('employees'))
@@ -704,6 +720,10 @@ def questions():
             active=True,
         )
         db.session.add(question)
+ok, err = safe_commit()
+if not ok:
+    flash(f'Erro ao salvar pergunta: {err}', 'danger')
+    return redirect(url_for('questions'))
         
         ok, err = safe_commit()
         if not ok:
@@ -778,6 +798,9 @@ def self_evaluation(assignment_id):
                     evaluator_role='employee', score=score, comment=comment,
                 ))
         ok, err = safe_commit()
+if not ok:
+    flash(f'Erro ao salvar autoavaliação: {err}', 'danger')
+    return redirect(url_for('self_evaluation', assignment_id=assignment.id))
         if not ok:
             flash(f'Erro ao salvar autoavaliação: {err}', 'danger')
             return redirect(url_for('self_evaluation', assignment_id=assignment.id))
@@ -807,12 +830,17 @@ def manager_evaluation(assignment_id):
                 db.session.add(Response(
                     assignment_id=assignment.id, question_id=q.id,
                     evaluator_role='manager', score=score, comment=comment,
+                ))ok, err = safe_commit()
+if not ok:
+    flash(f'Erro ao salvar avaliação do gestor: {err}', 'danger')
+    return redirect(url_for('manager_evaluation', assignment_id=assignment.id))
                 ))
         ok, err = safe_commit()
         if not ok:
             flash(f'Erro ao salvar avaliação do gestor: {err}', 'danger')
             return redirect(url_for('manager_evaluation', assignment_id=assignment.id))
 
+regenerate_feedback(assignment)
         regenerate_feedback(assignment)
         log_action('Concluiu avaliação do gestor', 'assignment', assignment.id, assignment.employee.name)
         flash('Avaliação do gestor registrada e feedback automático gerado.', 'success')
@@ -837,6 +865,7 @@ def feedback_view(assignment_id):
         feedback.manager_comments = request.form.get('manager_comments', '')
         db.session.commit()
         log_action('Editou feedback e PDI', 'feedback', feedback.id, assignment.employee.name)
+        flash('Feedback e PDI atualizados.', 'success')
         flash('Feedback e PDI updated.', 'success')
         return redirect(url_for('feedback_view', assignment_id=assignment.id))
     return render_template('feedback.html', assignment=assignment, feedback=feedback, summary=summary)
@@ -1001,6 +1030,7 @@ def report_pdf(assignment_id):
     ))
     story.append(Spacer(1, 12))
 
+    # KPIs em destaque
     kpi_data = [[
         Paragraph('AUTOAVALIAÇÃO', styles['metric_lbl']),
         Paragraph('AVALIAÇÃO GESTOR', styles['metric_lbl']),
@@ -1023,6 +1053,7 @@ def report_pdf(assignment_id):
     story.append(kpi_table)
     story.append(Spacer(1, 14))
 
+    # Perfil e tabela de pontos fortes x desenvolvimento
     story.append(Paragraph('Pontos Fortes e Oportunidades de Desenvolvimento', styles['h2']))
     strength_list = [c for c in summary['category_avg'] if c['score'] >= 4.0][:5]
     development_list = sorted([c for c in summary['category_avg'] if c['score'] < 4.0], key=lambda x: x['score'])[:5]
@@ -1207,6 +1238,7 @@ def report_pdf(assignment_id):
     ))
     story.append(Spacer(1, 10))
 
+    # Timeline visual 30-60-90
     timeline_data = [[
         Paragraph('<b>30 DIAS</b><br/><font size="9">Aprendizado e prática inicial</font>', styles['metric_lbl']),
         Paragraph('<b>60 DIAS</b><br/><font size="9">Aplicação e consistência</font>', styles['metric_lbl']),
@@ -1321,6 +1353,7 @@ def seed_database():
         ('Operação e Segurança', 'Mantém o posto de trabalho limpo, organizado e abastecido conforme o padrão da unidade.', 'Limpeza, reposição, organização visual.'),
         ('Disciplina e Pontualidade', 'É pontual, cumpre escala de trabalho e comunica eventuais ausências com antecedência.', 'Pontualidade, comprometimento, comunicação.'),
         ('Disciplina e Pontualidade', 'Cumpre as regras da empresa, uniforme, conduta e processos definidos pela liderança.', 'Aderência ao padrão da empresa.'),
+        ('Trabalho em Equipe', 'Colabora com colegas das diferentes funções (caixa, frentista, conveniência) para garantir o bom funcionamento do turno.', 'Cooperação, suporte mútuo, foco no time.'),
         ('Trabalho em Equipe', 'Colabora com colegas das diferentes funções (caixa, frentista, conveniência) para garantir o bom funcionamento do turno.', 'Cooperação, suporte mutuo, foco no time.'),
         ('Trabalho em Equipe', 'Compartilha informações relevantes do turno (estoque, ocorrências, clientes) com a liderança e colegas.', 'Comunicação clara, repasse de turno.'),
         ('Vendas e Conveniência', 'Conhece os produtos da loja e sugere ativamente itens adicionais e promoções para os clientes.', 'Postura comercial, conhecimento do mix.'),
@@ -1330,6 +1363,7 @@ def seed_database():
     ]
     for category, text, expected in questions_seed:
         db.session.add(Question(category=category, text=text, expected_behavior=expected, active=True))
+
     cycle = EvaluationCycle(
         name='Ciclo 2026.1 - Posto do Boi / Express do Boi',
         start_date=date(2026, 5, 1),
@@ -1340,20 +1374,14 @@ def seed_database():
     db.session.flush()
 
     for emp in User.query.filter_by(role='employee').all():
-        db.session.add(Assignment(cycle_id=cycle.id, employee_id=emp.id, manager_id=emp.manager_id))
+        db.session.add(Assignment(cycle_id=cycle.id, employee_id=emp.id, manager_id=manager.id))
 
     db.session.commit()
 
 
-# ==============================================================================
-# INICIALIZAÇÃO DO SERVIDOR
-# ==============================================================================
-
 with app.app_context():
-    db.create_all()  # Cria as tabelas se elas não existirem
-    # IMPORTANTE: Comentei a linha abaixo para que ela não limpe/sobrescreva 
-    # seus dados toda vez que o servidor reiniciar. Se precisar resetar o banco, remova o '#'
-    # seed_database()
+    seed_database()
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
