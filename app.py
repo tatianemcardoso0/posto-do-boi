@@ -29,7 +29,9 @@ from reportlab.platypus import (
 )
 
 app = Flask(__name__)
-app.config[BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+app.config['BASE_DIR'] = BASE_DIR
+
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 INSTANCE_DIR = os.path.join(BASE_DIR, 'instance')
 os.makedirs(INSTANCE_DIR, exist_ok=True)
