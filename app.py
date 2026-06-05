@@ -1597,4 +1597,32 @@ def seed_database():
         ('Disciplina e Pontualidade', 'Cumpre as regras da empresa, uniforme, conduta e processos definidos pela liderança.', 'Aderência ao padrão da empresa.'),
         ('Trabalho em Equipe', 'Colabora com colegas das diferentes funções (caixa, frentista, conveniência) para garantir o bom funcionamento do turno.', 'Cooperação, suporte mútuo, foco no time.'),
         ('Trabalho em Equipe', 'Compartilha informações relevantes do turno (estoque, ocorrências, clientes) com a liderança e colegas.', 'Comunicação clara, repasse de turno.'),
-        ('Vendas e Conven
+        ('Vendas e Conveniência', 'Conhece os produtos da loja e sugere ativamente itens adicionais e promoções para os clientes.', 'Postura comercial, conhecimento do mix.'),
+        ('Vendas e Conveniência', 'Confere e cuida do estoque, validade e organização dos produtos sob sua responsabilidade.', 'Reposição, validade, organização.'),
+        ('Responsabilidade Financeira', 'Realiza operações no caixa (dinheiro, cartão, pix) com precisão e segurança, evitando erros e divergências.', 'Conferência de caixa, atenção a fraudes.'),
+        ('Atitude e Aprendizado', 'Demonstra disposição para aprender, aceita feedback e busca melhorar continuamente seu desempenho.', 'Receptividade ao feedback, autodesenvolvimento.'),
+    ]
+    for category, text, expected in questions_seed:
+        db.session.add(Question(category=category, text=text, expected_behavior=expected, active=True))
+
+    cycle = EvaluationCycle(
+        name='Ciclo 2026.1 - Posto do Boi / Express do Boi',
+        start_date=date(2026, 5, 1),
+        end_date=date(2026, 6, 30),
+        status='active',
+    )
+    db.session.add(cycle)
+    db.session.flush()
+
+    for emp in User.query.filter_by(role='employee').all():
+        db.session.add(Assignment(cycle_id=cycle.id, employee_id=emp.id, manager_id=manager.id))
+
+    db.session.commit()
+
+
+with app.app_context():
+    seed_database()
+
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)
