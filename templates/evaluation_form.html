@@ -169,7 +169,6 @@
       }
     }
 
-    // Pintar estado inicial
     const initial = parseInt(hiddenInput.value) || 0;
     if (initial) paint(initial);
 
@@ -197,7 +196,6 @@
     });
   });
 
-  // Validação: garantir que todas as estrelas foram clicadas
   document.getElementById('evalForm').addEventListener('submit', (e) => {
     const inputs = document.querySelectorAll('input[name^="score_"]');
     let firstMissing = null;
