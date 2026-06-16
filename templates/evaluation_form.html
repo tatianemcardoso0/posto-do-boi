@@ -49,7 +49,7 @@
                  value="{{ item.score if item else '' }}" required>
           <span class="star-label" id="label_{{ question.id }}">
             {% if item %}
-              <strong style="color: var(--brand-primary);">{{ item.score }}/5</strong> — 
+              <strong style="color: var(--brand-primary);">{{ item.score }}/5</strong> —
               {% if item.score == 1 %}Muito abaixo
               {% elif item.score == 2 %}Precisa melhorar
               {% elif item.score == 3 %}Atende
@@ -66,8 +66,7 @@
       <div>
         <label class="form-label"><strong>Comentário / exemplos observados:</strong></label>
         <textarea class="form-control" name="comment_{{ question.id }}"
-                  placeholder="Descreva exemplos concretos observados neste critério..."
-                  required>{{ item.comment if item else '' }}</textarea>
+                  placeholder="Descreva exemplos concretos observados neste critério...">{{ item.comment if item else '' }}</textarea>
       </div>
     </div>
   {% endfor %}
@@ -179,12 +178,14 @@
         paint(score);
         setLabel(score);
       });
+
       star.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           star.click();
         }
       });
+
       star.addEventListener('mouseenter', () => {
         preview(parseInt(star.dataset.value));
       });
@@ -199,11 +200,13 @@
   document.getElementById('evalForm').addEventListener('submit', (e) => {
     const inputs = document.querySelectorAll('input[name^="score_"]');
     let firstMissing = null;
+
     inputs.forEach(inp => {
       if (!inp.value || inp.value === '0') {
         if (!firstMissing) firstMissing = inp;
       }
     });
+
     if (firstMissing) {
       e.preventDefault();
       alert('Por favor, atribua uma nota (estrelas) para todas as perguntas antes de salvar.');
