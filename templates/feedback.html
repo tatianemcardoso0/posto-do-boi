@@ -6,31 +6,40 @@
       <div class="kicker">Consolidação final</div>
       <h3 class="mb-1">Feedback de {{ assignment.employee.name }}</h3>
       <div class="subtle">Ciclo {{ assignment.cycle.name }} • {{ assignment.employee.position }} • {{ assignment.employee.unit }}</div>
+
       <div class="row g-3 mt-3">
         <div class="col-md-4">
           <div class="metric-card">
             <div class="metric-label">Autoavaliação</div>
             <div class="metric-value">{{ summary.employee_avg }}</div>
             <div class="stars-display mt-1">
-              {% for i in range(1, 6) %}<span class="mini-star {% if summary.employee_avg >= i %}filled{% elif summary.employee_avg >= i - 0.5 %}half{% endif %}">★</span>{% endfor %}
+              {% for i in range(1, 6) %}
+                <span class="mini-star {% if summary.employee_avg >= i %}filled{% elif summary.employee_avg >= i - 0.5 %}half{% endif %}">★</span>
+              {% endfor %}
             </div>
           </div>
         </div>
+
         <div class="col-md-4">
           <div class="metric-card">
             <div class="metric-label">Gestor</div>
             <div class="metric-value">{{ summary.manager_avg }}</div>
             <div class="stars-display mt-1">
-              {% for i in range(1, 6) %}<span class="mini-star {% if summary.manager_avg >= i %}filled{% elif summary.manager_avg >= i - 0.5 %}half{% endif %}">★</span>{% endfor %}
+              {% for i in range(1, 6) %}
+                <span class="mini-star {% if summary.manager_avg >= i %}filled{% elif summary.manager_avg >= i - 0.5 %}half{% endif %}">★</span>
+              {% endfor %}
             </div>
           </div>
         </div>
+
         <div class="col-md-4">
           <div class="metric-card">
             <div class="metric-label">Média final 180°</div>
             <div class="metric-value">{{ summary.final_avg }}</div>
             <div class="stars-display mt-1">
-              {% for i in range(1, 6) %}<span class="mini-star {% if summary.final_avg >= i %}filled{% elif summary.final_avg >= i - 0.5 %}half{% endif %}">★</span>{% endfor %}
+              {% for i in range(1, 6) %}
+                <span class="mini-star {% if summary.final_avg >= i %}filled{% elif summary.final_avg >= i - 0.5 %}half{% endif %}">★</span>
+              {% endfor %}
             </div>
             <span class="metric-badge mt-2">{{ feedback.profile_label }}</span>
           </div>
@@ -38,12 +47,16 @@
       </div>
     </div>
   </div>
+
   <div class="col-lg-4">
     <div class="panel-card h-100 d-flex flex-column justify-content-between">
       <div>
         <div class="kicker">Ações</div>
         <h5>Exportar e regenerar</h5>
-        <p class="subtle small mb-3">Baixe o relatório profissional completo em PDF (capa, gráficos, histórico, PDI e assinaturas) ou regenere o feedback automático.</p>
+        <p class="subtle small mb-3">
+          Baixe o relatório profissional completo em PDF (capa, gráficos, histórico, PDI e assinaturas)
+          ou regenere o feedback automático.
+        </p>
       </div>
       <div class="d-grid gap-2">
         <a href="{{ url_for('report_pdf', assignment_id=assignment.id) }}" class="btn btn-accent">📄 Baixar PDF completo</a>
@@ -72,28 +85,45 @@
           <tr>
             <td><strong>{{ row.question.category }}</strong></td>
             <td>{{ row.question.text }}</td>
+
             <td class="text-center">
               {% if row.employee %}
                 <div class="mini-stars-row">
-                  {% for i in range(1, 6) %}<span class="mini-star {% if row.employee.score >= i %}filled{% endif %}">★</span>{% endfor %}
+                  {% for i in range(1, 6) %}
+                    <span class="mini-star {% if row.employee.score >= i %}filled{% endif %}">★</span>
+                  {% endfor %}
                 </div>
                 <div class="small fw-bold">{{ row.employee.score }}</div>
-              {% else %}<span class="subtle">-</span>{% endif %}
+              {% else %}
+                <span class="subtle">-</span>
+              {% endif %}
             </td>
+
             <td class="text-center">
               {% if row.manager %}
                 <div class="mini-stars-row">
-                  {% for i in range(1, 6) %}<span class="mini-star {% if row.manager.score >= i %}filled{% endif %}">★</span>{% endfor %}
+                  {% for i in range(1, 6) %}
+                    <span class="mini-star {% if row.manager.score >= i %}filled{% endif %}">★</span>
+                  {% endfor %}
                 </div>
                 <div class="small fw-bold">{{ row.manager.score }}</div>
-              {% else %}<span class="subtle">-</span>{% endif %}
+              {% else %}
+                <span class="subtle">-</span>
+              {% endif %}
             </td>
+
             <td class="text-center">
               {% if row.final_score is not none %}
-                {% if row.final_score >= 4 %}<span class="score-pill score-high">{{ row.final_score }}</span>
-                {% elif row.final_score >= 3 %}<span class="score-pill score-mid">{{ row.final_score }}</span>
-                {% else %}<span class="score-pill score-low">{{ row.final_score }}</span>{% endif %}
-              {% else %}-{% endif %}
+                {% if row.final_score >= 4 %}
+                  <span class="score-pill score-high">{{ row.final_score }}</span>
+                {% elif row.final_score >= 3 %}
+                  <span class="score-pill score-mid">{{ row.final_score }}</span>
+                {% else %}
+                  <span class="score-pill score-low">{{ row.final_score }}</span>
+                {% endif %}
+              {% else %}
+                -
+              {% endif %}
             </td>
           </tr>
         {% endfor %}
@@ -112,6 +142,7 @@
         <textarea class="form-control large-box" name="editable_feedback" required>{{ feedback.editable_feedback }}</textarea>
       </div>
     </div>
+
     <div class="col-lg-6">
       <div class="panel-card h-100">
         <div class="kicker">PDI</div>
@@ -120,6 +151,7 @@
         <textarea class="form-control large-box" name="editable_pdi" required>{{ feedback.editable_pdi }}</textarea>
       </div>
     </div>
+
     <div class="col-12">
       <div class="panel-card">
         <div class="kicker">Comentários do gestor</div>
@@ -127,6 +159,7 @@
         <textarea class="form-control" name="manager_comments" rows="3">{{ feedback.manager_comments }}</textarea>
       </div>
     </div>
+
     <div class="col-12 text-end">
       <a href="{{ url_for('manager_dashboard') }}" class="btn btn-outline-secondary">Voltar ao dashboard</a>
       <button class="btn btn-brand">💾 Salvar feedback e PDI</button>
@@ -141,18 +174,22 @@
     font-size: 1rem;
     line-height: 1;
   }
+
   .mini-star {
     color: #d1d5db;
   }
+
   .mini-star.filled {
     color: #FFCC00;
   }
+
   .mini-star.half {
     background: linear-gradient(90deg, #FFCC00 50%, #d1d5db 50%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+
   .mini-stars-row .mini-star {
     font-size: 0.85rem;
   }
