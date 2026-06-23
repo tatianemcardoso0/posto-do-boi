@@ -29,12 +29,9 @@ from reportlab.platypus import (
 )
 
 app = Flask(__name__)
-database_url = os.environ.get('DATABASE_URL', 'sqlite:///postodoboi_rh.db')
-if database_url.startswith('postgres://'):
-    database_url = database_url.replace('postgres://', 'postgresql://', 1)
-app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///postodoboi_rh.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'postodoboi-rh-secret')
+app.config['SECRET_KEY'] = 'postodoboi-rh-secret'
 
 db = SQLAlchemy(app)
 
@@ -1192,59 +1189,10 @@ def report_pdf(assignment_id):
 
 
 # =========================================================
-# COMPATIBILIDADE DE ESQUEMA / SEED
+# SEED
 # =========================================================
-def ensure_sqlite_compat_schema():
-    uri = app.config.get('SQLALCHEMY_DATABASE_URI', '') or ''
-    if not uri.startswith('sqlite'):
-        return
-
-    def existing_columns(table_name):
-        try:
-            rows = db.session.execute(db.text(f"PRAGMA table_info({table_name})")).fetchall()
-            return {row[1] for row in rows}
-        except Exception:
-            return set()
-
-    def add_column_if_missing(table_name, column_name, ddl):
-        cols = existing_columns(table_name)
-        if cols and column_name not in cols:
-            db.session.execute(db.text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {ddl}"))
-
-    db.create_all()
-
-    add_column_if_missing('company_brand', 'mission', "TEXT NOT NULL DEFAULT ''")
-    add_column_if_missing('company_brand', 'values', "TEXT NOT NULL DEFAULT ''")
-    add_column_if_missing('company_brand', 'primary_color', "VARCHAR(20) NOT NULL DEFAULT '#003B7A'")
-    add_column_if_missing('company_brand', 'secondary_color', "VARCHAR(20) NOT NULL DEFAULT '#FFCC00'")
-
-    add_column_if_missing('user', 'unit', "VARCHAR(120) NOT NULL DEFAULT 'Posto do Boi'")
-    add_column_if_missing('user', 'admission_date', 'DATE')
-    add_column_if_missing('user', 'active', 'BOOLEAN DEFAULT 1')
-    add_column_if_missing('user', 'manager_id', 'INTEGER')
-
-    add_column_if_missing('question', 'expected_behavior', 'TEXT')
-    add_column_if_missing('question', 'active', 'BOOLEAN DEFAULT 1')
-
-    add_column_if_missing('response', 'comment', "TEXT NOT NULL DEFAULT ''")
-    add_column_if_missing('response', 'submitted_at', 'DATETIME')
-
-    add_column_if_missing('final_feedback', 'overall_score', 'FLOAT')
-    add_column_if_missing('final_feedback', 'profile_label', 'VARCHAR(80)')
-    add_column_if_missing('final_feedback', 'strengths', "TEXT NOT NULL DEFAULT ''")
-    add_column_if_missing('final_feedback', 'development_points', "TEXT NOT NULL DEFAULT ''")
-    add_column_if_missing('final_feedback', 'auto_feedback', "TEXT NOT NULL DEFAULT ''")
-    add_column_if_missing('final_feedback', 'editable_feedback', "TEXT NOT NULL DEFAULT ''")
-    add_column_if_missing('final_feedback', 'auto_pdi', "TEXT NOT NULL DEFAULT ''")
-    add_column_if_missing('final_feedback', 'editable_pdi', "TEXT NOT NULL DEFAULT ''")
-    add_column_if_missing('final_feedback', 'manager_comments', "TEXT NOT NULL DEFAULT ''")
-    add_column_if_missing('final_feedback', 'generated_at', 'DATETIME')
-
-    db.session.commit()
-
-
 def seed_database():
-    ensure_sqlite_compat_schema()
+    db.create_all()
     if CompanyBrand.query.first():
         return
 
