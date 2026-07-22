@@ -1,130 +1,47 @@
-{% extends 'base.html' %}
-{% block content %}
-<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-  <div>
-    <div class="kicker">Painel do gestor</div>
-    <div class="section-title">Dashboard 180° — Posto do Boi & Express do Boi</div>
-    <div class="subtle">Acompanhe o desempenho da equipe, ciclos e pendências em tempo real.</div>
-  </div>
-  {% if active_cycle %}
-  <div class="panel-card py-3 px-4 text-end">
-    <div class="kicker">Ciclo ativo</div>
-    <h5 class="mb-1">{{ active_cycle.name }}</h5>
-    <div class="subtle">{{ active_cycle.start_date.strftime('%d/%m/%Y') }} até {{ active_cycle.end_date.strftime('%d/%m/%Y') }}</div>
-  </div>
-  {% endif %}
-</div>
-
-<div class="row g-3 mb-4">
-  <div class="col-md-3 col-6"><div class="metric-card"><div class="metric-label">Colaboradores</div><div class="metric-value">{{ metrics.employees_total }}</div><span class="metric-badge">total ativos</span></div></div>
-  <div class="col-md-3 col-6"><div class="metric-card"><div class="metric-label">No ciclo atual</div><div class="metric-value">{{ metrics.team_size }}</div></div></div>
-  <div class="col-md-3 col-6"><div class="metric-card"><div class="metric-label">Avaliações concluídas</div><div class="metric-value">{{ metrics.completed }}</div></div></div>
-  <div class="col-md-3 col-6"><div class="metric-card"><div class="metric-label">Em andamento</div><div class="metric-value">{{ metrics.in_progress }}</div></div></div>
-</div>
-
-<div class="row g-3 mb-4">
-  <div class="col-md-4">
-    <div class="metric-card">
-      <div class="metric-label">Avanço médio do ciclo</div>
-      <div class="metric-value">{{ metrics.avg_progress }}%</div>
-      <div class="progress mt-2"><div class="progress-bar" style="width: {{ metrics.avg_progress }}%"></div></div>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="metric-card">
-      <div class="metric-label">Nota média final</div>
-      <div class="metric-value">{{ metrics.avg_score }}</div>
-      <span class="metric-badge">avaliações concluídas</span>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="metric-card">
-      <div class="metric-label">Ciclos ativos</div>
-      <div class="metric-value">{{ metrics.cycles_open }}</div>
-      <a href="{{ url_for('cycles') }}" class="btn btn-sm btn-brand mt-2">Gerenciar ciclos</a>
-    </div>
-  </div>
-</div>
-
-<div class="row g-3 mb-4">
-  <div class="col-md-12">
-    <div class="panel-card">
-      <div class="kicker">Por unidade</div>
-      <h5 class="mb-3">Desempenho por unidade</h5>
-      <div class="row g-3">
-        {% for unit, info in metrics.units.items() %}
-        <div class="col-md-3 col-6">
-          <div class="eval-card">
-            <div class="kicker">{{ unit }}</div>
-            <h5 class="mb-1">{{ info.completed }}/{{ info.team }}</h5>
-            <div class="subtle small">avaliações concluídas</div>
-          </div>
-        </div>
-        {% else %}
-        <div class="col-12 subtle">Cadastre colaboradores para visualizar dados por unidade.</div>
-        {% endfor %}
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="panel-card">
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-    <div>
-      <div class="kicker">Equipe</div>
-      <h4 class="mb-0">Avaliações em andamento</h4>
-      <div class="subtle">Avalie cada colaborador, gere o feedback automático, edite e exporte em PDF.</div>
-    </div>
-    <a href="{{ url_for('cycles') }}" class="btn btn-outline-secondary">Novo ciclo</a>
-  </div>
-  <div class="table-responsive">
-    <table class="table align-middle">
-      <thead>
-        <tr>
-          <th>Colaborador</th>
-          <th>Unidade</th>
-          <th>Cargo</th>
-          <th>Status</th>
-          <th>Progresso</th>
-          <th class="text-end">Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for assignment in assignments %}
-          {% set progress = progress_data[loop.index0] %}
-          <tr>
-            <td>
-              <strong>{{ assignment.employee.name }}</strong><br>
-              <span class="subtle small">{{ assignment.employee.department }}</span>
-            </td>
-            <td>{{ assignment.employee.unit }}</td>
-            <td>{{ assignment.employee.position }}</td>
-            <td>
-              {% if progress.employee_done and progress.manager_done %}
-                <span class="score-pill score-high">Concluído</span>
-              {% elif progress.percent > 0 %}
-                <span class="score-pill score-mid">Em andamento</span>
-              {% else %}
-                <span class="score-pill score-low">Não iniciado</span>
-              {% endif %}
-            </td>
-            <td style="min-width:220px">
-              <div class="d-flex justify-content-between small mb-1"><span>Completo</span><span>{{ progress.percent }}%</span></div>
-              <div class="progress"><div class="progress-bar" style="width: {{ progress.percent }}%"></div></div>
-            </td>
-            <td class="text-end">
-              <div class="btn-group">
-                <a href="{{ url_for('manager_evaluation', assignment_id=assignment.id) }}" class="btn btn-sm btn-brand">Avaliar</a>
-                <a href="{{ url_for('feedback_view', assignment_id=assignment.id) }}" class="btn btn-sm btn-accent">Feedback</a>
-                <a href="{{ url_for('report_pdf', assignment_id=assignment.id) }}" class="btn btn-sm btn-outline-secondary">PDF</a>
-              </div>
-            </td>
-          </tr>
-        {% else %}
-          <tr><td colspan="6" class="text-center subtle py-4">Nenhum colaborador no ciclo atual. Crie um ciclo em "Ciclos".</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
+{% extends 'base.html' %} {% block content %}
+Painel do gestor
+Dashboard 180° — Posto do Boi & Express do Boi
+Acompanhe o desempenho da equipe, ciclos e pendências em tempo real.
+{% if active_cycle %}
+Ciclo ativo
+{{ active_cycle.name }}
+{{ active_cycle.start_date.strftime('%d/%m/%Y') }} até {{ active_cycle.end_date.strftime('%d/%m/%Y') }}
+{% endif %}
+Colaboradores
+{{ metrics.employees_total }}
+total ativos
+No ciclo atual
+{{ metrics.team_size }}
+Avaliações concluídas
+{{ metrics.completed }}
+Em andamento
+{{ metrics.in_progress }}
+Avanço médio do ciclo
+{{ metrics.avg_progress }}%
+Nota média final
+{{ metrics.avg_score }}
+avaliações concluídas
+Ciclos ativos
+{{ metrics.cycles_open }}
+Gerenciar ciclos
+Por unidade
+Desempenho por unidade
+{% for unit, info in metrics.units.items() %}
+{{ unit }}
+{{ info.completed }}/{{ info.team }}
+avaliações concluídas
+{% else %}
+Cadastre colaboradores para visualizar dados por unidade.
+{% endfor %}
+Equipe
+Avaliações em andamento
+Avalie cada colaborador, gere o feedback automático, edite e exporte em PDF.
+Novo ciclo
+{% for assignment in assignments %} {% set progress = progress_data[loop.index0] %} {% else %} {% endfor %}
+Colaborador	Unidade	Cargo	Status	Progresso	Ações
+{{ assignment.employee.name }}
+{{ assignment.employee.department }}	{{ assignment.employee.unit }}	{{ assignment.employee.position }}	{% if progress.employee_done and progress.manager_done %} Concluído {% elif progress.percent > 0 %} Em andamento {% else %} Não iniciado {% endif %}	
+Completo{{ progress.percent }}%
+Avaliar Feedback PDF
+Nenhum colaborador no ciclo atual. Crie um ciclo em "Ciclos".
 {% endblock %}
