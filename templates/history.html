@@ -1,52 +1,28 @@
-{% extends 'base.html' %}
-{% block content %}
-<div class="mb-4">
-  <div class="kicker">Histórico</div>
-  <div class="section-title">Avaliações e atividades do sistema</div>
-  <div class="subtle">Consulte ciclos anteriores, baixe relatórios e veja o log de tudo que foi feito.</div>
-</div>
-
-<div class="row g-4 mb-4">
-  {% for card in cards %}
-    <div class="col-lg-6">
-      <div class="panel-card h-100">
-        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-          <div>
-            <h5 class="mb-1">{{ card.assignment.employee.name }}</h5>
-            <div class="subtle small">{{ card.assignment.employee.position }} • {{ card.assignment.employee.unit }}</div>
-            <div class="subtle small">{{ card.assignment.cycle.name }}</div>
-          </div>
-          <span class="metric-badge">{{ card.progress.percent }}%</span>
-        </div>
-        <div class="row g-3 mb-3">
-          <div class="col-4"><div class="metric-card"><div class="metric-label">Auto</div><div class="metric-value" style="font-size:1.3rem">{{ card.summary.employee_avg }}</div></div></div>
-          <div class="col-4"><div class="metric-card"><div class="metric-label">Gestor</div><div class="metric-value" style="font-size:1.3rem">{{ card.summary.manager_avg }}</div></div></div>
-          <div class="col-4"><div class="metric-card"><div class="metric-label">Final</div><div class="metric-value" style="font-size:1.3rem">{{ card.summary.final_avg }}</div></div></div>
-        </div>
-        <div class="d-flex justify-content-end gap-2">
-          <a href="{{ url_for('feedback_view', assignment_id=card.assignment.id) }}" class="btn btn-sm btn-accent">Abrir feedback</a>
-          <a href="{{ url_for('report_pdf', assignment_id=card.assignment.id) }}" class="btn btn-sm btn-outline-secondary">PDF</a>
-        </div>
-      </div>
-    </div>
-  {% else %}
-    <div class="col-12"><div class="panel-card text-center subtle py-5">Nenhum histórico disponível.</div></div>
-  {% endfor %}
-</div>
-
-<div class="panel-card">
-  <div class="kicker">Auditoria</div>
-  <h5 class="mb-3">Log de atividades</h5>
-  <ul class="timeline">
-    {% for log in logs %}
-      <li>
-        <strong>{{ log.action }}</strong>
-        <span class="subtle">— {{ log.entity_type }}{% if log.details %} • {{ log.details }}{% endif %}</span>
-        <div class="meta">{{ log.user.name if log.user else 'Sistema' }} • {{ log.created_at.strftime('%d/%m/%Y %H:%M') }}</div>
-      </li>
-    {% else %}
-      <li class="subtle">Sem registros ainda.</li>
-    {% endfor %}
-  </ul>
-</div>
+{% extends 'base.html' %} {% block content %}
+Histórico
+Avaliações e atividades do sistema
+Consulte ciclos anteriores, baixe relatórios e veja o log de tudo que foi feito.
+{% for card in cards %}
+{{ card.assignment.employee.name }}
+{{ card.assignment.employee.position }} • {{ card.assignment.employee.unit }}
+{{ card.assignment.cycle.name }}
+{{ card.progress.percent }}%
+Auto
+{{ card.summary.employee_avg }}
+Gestor
+{{ card.summary.manager_avg }}
+Final
+{{ card.summary.final_avg }}
+Abrir feedback PDF
+{% else %}
+Nenhum histórico disponível.
+{% endfor %}
+Auditoria
+Log de atividades
+{% for log in logs %}
+{{ log.action }} — {{ log.entity_type }}{% if log.details %} • {{ log.details }}{% endif %}
+{{ log.user.name if log.user else 'Sistema' }} • {{ log.created_at.strftime('%d/%m/%Y %H:%M') }}
+{% else %}
+Sem registros ainda.
+{% endfor %}
 {% endblock %}
