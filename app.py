@@ -923,45 +923,32 @@ def report_pdf(assignment_id):
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
-        buffer, pagesize=A4,
-        rightMargin=1.5 * cm, leftMargin=1.5 * cm,
-        topMargin=1.2 * cm, bottomMargin=1.2 * cm,
+        buffer,
+        pagesize=A4,
+        rightMargin=1.5 * cm,
+        leftMargin=1.5 * cm,
+        topMargin=1.5 * cm,
+        bottomMargin=1.5 * cm,
         title=f'Relatório 180° - {assignment.employee.name}',
     )
     base = getSampleStyleSheet()
     primary = colors.HexColor(IPIRANGA_BLUE)
-    primary_dark = colors.HexColor(IPIRANGA_BLUE_DARK)
     secondary = colors.HexColor(IPIRANGA_YELLOW)
     grey = colors.HexColor('#475569')
-    light = colors.HexColor('#f1f5f9')
+    light = colors.HexColor('#f8fafc')
 
     styles = {
-        'cover_kicker': ParagraphStyle('CK', parent=base['Normal'], fontSize=11,
-                                       textColor=secondary, alignment=TA_CENTER, spaceAfter=8,
-                                       fontName='Helvetica-Bold', leading=14),
-        'cover_title': ParagraphStyle('CT', parent=base['Title'], fontSize=32,
-                                      textColor=colors.white, alignment=TA_CENTER,
-                                      spaceAfter=14, leading=36, fontName='Helvetica-Bold'),
-        'cover_sub': ParagraphStyle('CS', parent=base['Normal'], fontSize=15,
-                                    textColor=colors.white, alignment=TA_CENTER, spaceAfter=12, leading=18),
-        'cover_name': ParagraphStyle('CN', parent=base['Normal'], fontSize=22,
-                                     textColor=secondary, alignment=TA_CENTER, spaceAfter=8,
-                                     fontName='Helvetica-Bold', leading=26),
-        'cover_meta': ParagraphStyle('CM', parent=base['Normal'], fontSize=12,
-                                     textColor=colors.white, alignment=TA_CENTER, spaceAfter=6, leading=15),
         'h1': ParagraphStyle('H1', parent=base['Heading1'], fontSize=18, textColor=primary,
                              spaceAfter=10, spaceBefore=6, fontName='Helvetica-Bold'),
-        'h2': ParagraphStyle('H2', parent=base['Heading2'], fontSize=14, textColor=primary,
+        'h2': ParagraphStyle('H2', parent=base['Heading2'], fontSize=13, textColor=primary,
                              spaceAfter=8, spaceBefore=10, fontName='Helvetica-Bold'),
-        'h3': ParagraphStyle('H3', parent=base['Heading3'], fontSize=12, textColor=primary_dark,
-                             spaceAfter=6, fontName='Helvetica-Bold'),
         'body': ParagraphStyle('B', parent=base['BodyText'], fontSize=10, leading=14, alignment=TA_JUSTIFY),
-        'body_left': ParagraphStyle('BL', parent=base['BodyText'], fontSize=10, leading=14),
+        'body_left': ParagraphStyle('BL', parent=base['BodyText'], fontSize=10, leading=14, alignment=TA_LEFT),
         'small': ParagraphStyle('S', parent=base['BodyText'], fontSize=9, leading=12, textColor=grey),
         'metric_lbl': ParagraphStyle('ML', parent=base['Normal'], fontSize=9, textColor=colors.white,
                                      alignment=TA_CENTER, fontName='Helvetica-Bold'),
-        'metric_val': ParagraphStyle('MV', parent=base['Normal'], fontSize=22, textColor=colors.white,
-                                     alignment=TA_CENTER, fontName='Helvetica-Bold', leading=26),
+        'metric_val': ParagraphStyle('MV', parent=base['Normal'], fontSize=18, textColor=colors.white,
+                                     alignment=TA_CENTER, fontName='Helvetica-Bold'),
     }
 
     def page_decorator(canvas, doc_):
@@ -976,56 +963,16 @@ def report_pdf(assignment_id):
         canvas.setFont('Helvetica', 8)
         canvas.drawString(1.5*cm, 0.7*cm, f'Gerado em {datetime.utcnow().strftime("%d/%m/%Y %H:%M")}')
         canvas.drawRightString(A4[0] - 1.5*cm, 0.7*cm, f'Página {doc_.page}')
-        canvas.setStrokeColor(secondary)
-        canvas.setLineWidth(2)
-        canvas.line(1.5*cm, 1*cm, A4[0] - 1.5*cm, 1*cm)
         canvas.restoreState()
 
     story = []
-
-    cover_table = Table(
-        [[Paragraph('POSTO DO BOI &amp; EXPRESS DO BOI', styles['cover_kicker'])],
-         [Spacer(1, 8)],
-         [Paragraph('RELATÓRIO DE<br/>AVALIAÇÃO 180°', styles['cover_title'])],
-         [Spacer(1, 14)],
-         [Paragraph(employee_name.upper(), styles['cover_name'])],
-         [Paragraph(f'{employee_position} • {employee_department}', styles['cover_sub'])],
-         [Paragraph(f'Unidade: {employee_unit}', styles['cover_meta'])],
-         [Spacer(1, 30)],
-         [Paragraph(f'Ciclo: <b>{cycle_name}</b>', styles['cover_meta'])],
-         [Paragraph(f'Período: {assignment.cycle.start_date.strftime("%d/%m/%Y")} a {assignment.cycle.end_date.strftime("%d/%m/%Y")}', styles['cover_meta'])],
-         [Paragraph(f'Gestor responsável: <b>{manager_name}</b>', styles['cover_meta'])],
-         [Spacer(1, 40)],
-         [Paragraph(f'NOTA FINAL CONSOLIDADA<br/><font size="46">{summary["final_avg"]:.2f}</font>', styles['cover_sub'])],
-         [Paragraph(f'<b>{profile_label}</b>', styles['cover_kicker'])],
-         [Spacer(1, 60)],
-         [Paragraph(f'Documento confidencial • {safe_text(brand_name)}', styles['cover_meta'])],
-        ],
-        colWidths=[A4[0] - 3 * cm],
-    )
-    cover_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, -1), primary_dark),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('TOPPADDING', (0, 0), (-1, -1), 20),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 20),
-        ('LEFTPADDING', (0, 0), (-1, -1), 30),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 30),
-    ]))
-
-    story.append(Spacer(1, 1.5*cm))
-    story.append(cover_table)
-    story.append(PageBreak())
-
-    story.append(Paragraph('Resumo Executivo', styles['h1']))
-    story.append(Paragraph(
-        f'Este relatório apresenta a consolidação completa da avaliação 180° de '
-        f'<b>{employee_name}</b>, considerando a autoavaliação do colaborador e a '
-        f'percepção do gestor direto. O ciclo avalia <b>{len(summary["rows"])} critérios</b> '
-        f'distribuídos em <b>{len(summary["category_compare"])} competências</b>, resultando em uma '
-        f'nota final consolidada de <b>{summary["final_avg"]:.2f}</b> '
-        f'(perfil <b>{profile_label}</b>).',
-        styles['body'],
-    ))
+    story.append(Paragraph('Relatório de Avaliação 180°', styles['h1']))
+    story.append(Paragraph(f'<b>Empresa:</b> {safe_text(brand_name)}', styles['body_left']))
+    story.append(Paragraph(f'<b>Colaborador:</b> {employee_name}', styles['body_left']))
+    story.append(Paragraph(f'<b>Cargo:</b> {employee_position} • <b>Departamento:</b> {employee_department}', styles['body_left']))
+    story.append(Paragraph(f'<b>Unidade:</b> {employee_unit}', styles['body_left']))
+    story.append(Paragraph(f'<b>Ciclo:</b> {cycle_name}', styles['body_left']))
+    story.append(Paragraph(f'<b>Gestor:</b> {manager_name} ({manager_position})', styles['body_left']))
     story.append(Spacer(1, 12))
 
     kpi_data = [[
@@ -1037,11 +984,12 @@ def report_pdf(assignment_id):
         Paragraph(f'{summary["manager_avg"]:.2f}', styles['metric_val']),
         Paragraph(f'{summary["final_avg"]:.2f}', styles['metric_val']),
     ]]
-    kpi_table = Table(kpi_data, colWidths=[6*cm, 6*cm, 6*cm], rowHeights=[0.9*cm, 1.4*cm])
+    kpi_table = Table(kpi_data, colWidths=[6*cm, 6*cm, 6*cm], rowHeights=[0.9*cm, 1.2*cm])
     kpi_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#1e40af')),
-        ('BACKGROUND', (1, 0), (1, -1), primary),
-        ('BACKGROUND', (2, 0), (2, -1), primary_dark),
+        ('BACKGROUND', (0, 0), (0, -1), primary),
+        ('BACKGROUND', (1, 0), (1, -1), colors.HexColor('#1e40af')),
+        ('BACKGROUND', (2, 0), (2, -1), secondary),
+        ('TEXTCOLOR', (2, 0), (2, -1), colors.black),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('TOPPADDING', (0, 0), (-1, -1), 6),
@@ -1050,78 +998,32 @@ def report_pdf(assignment_id):
     story.append(kpi_table)
     story.append(Spacer(1, 14))
 
-    story.append(Paragraph('Pontos Fortes e Oportunidades de Desenvolvimento', styles['h2']))
-    strength_list = [c for c in summary['category_avg'] if c['score'] >= 4.0][:5]
-    development_list = sorted([c for c in summary['category_avg'] if c['score'] < 4.0], key=lambda x: x['score'])[:5]
-    if not strength_list:
-        strength_list = sorted(summary['category_avg'], key=lambda x: x['score'], reverse=True)[:3]
-    if not development_list:
-        development_list = sorted(summary['category_avg'], key=lambda x: x['score'])[:3]
+    story.append(Paragraph('Perfil consolidado', styles['h2']))
+    story.append(Paragraph(f'Perfil identificado: <b>{profile_label}</b>.', styles['body']))
 
-    max_rows = max(len(strength_list), len(development_list)) if (strength_list or development_list) else 1
-    sd_data = [[
-        Paragraph('<b>✓ PONTOS FORTES</b>', styles['metric_lbl']),
-        Paragraph('<b>↑ OPORTUNIDADES DE DESENVOLVIMENTO</b>', styles['metric_lbl']),
-    ]]
-    for i in range(max_rows):
-        s = strength_list[i] if i < len(strength_list) else None
-        d = development_list[i] if i < len(development_list) else None
-        sd_data.append([
-            Paragraph(f"<b>{safe_text(s['category'])}</b><br/><font color='#15803d'>Nota: {s['score']:.2f}</font>", styles['small']) if s else Paragraph('—', styles['small']),
-            Paragraph(f"<b>{safe_text(d['category'])}</b><br/><font color='#dc2626'>Nota: {d['score']:.2f}</font>", styles['small']) if d else Paragraph('—', styles['small']),
-        ])
-    sd_table = Table(sd_data, colWidths=[(A4[0] - 3*cm)/2, (A4[0] - 3*cm)/2])
-    sd_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (0, 0), colors.HexColor('#15803d')),
-        ('BACKGROUND', (1, 0), (1, 0), colors.HexColor('#b45309')),
+    story.append(Paragraph('Resumo por competência', styles['h2']))
+    category_data = [['Competência', 'Nota final']]
+    if summary['category_avg']:
+        for row in summary['category_avg']:
+            category_data.append([safe_text(row['category']), f"{row['score']:.2f}"])
+    else:
+        category_data.append(['Sem respostas registradas', '0.00'])
+    category_table = Table(category_data, colWidths=[14*cm, 4*cm], repeatRows=1)
+    category_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), primary),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cbd5e1')),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('TOPPADDING', (0, 0), (-1, -1), 8),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-        ('LEFTPADDING', (0, 0), (-1, -1), 10),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('GRID', (0, 0), (-1, -1), 0.4, colors.HexColor('#cbd5e1')),
+        ('BACKGROUND', (0, 1), (-1, -1), light),
+        ('ALIGN', (1, 1), (1, -1), 'CENTER'),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
     ]))
-    story.append(sd_table)
-    story.append(PageBreak())
+    story.append(category_table)
+    story.append(Spacer(1, 14))
 
-    story.append(Paragraph('Análise Visual de Competências', styles['h1']))
-    story.append(Paragraph(
-        'Comparação visual entre a autoavaliação do colaborador e a percepção do gestor para cada competência avaliada.',
-        styles['body'],
-    ))
-    story.append(Spacer(1, 10))
-
-    bar_buf = generate_bar_chart(summary['category_compare'])
-    if bar_buf:
-        img = Image(bar_buf, width=16*cm, height=max(8, len(summary['category_compare']) * 1.1)*cm)
-        img.hAlign = 'CENTER'
-        story.append(img)
-        story.append(Spacer(1, 12))
-
-    radar_buf = generate_radar_chart(summary['category_compare'])
-    if radar_buf:
-        story.append(PageBreak())
-        story.append(Paragraph('Mapa de Competências — Visão 180°', styles['h1']))
-        story.append(Paragraph(
-            'O gráfico radar permite identificar rapidamente o equilíbrio entre as competências, '
-            'mostrando a sobreposição da autoavaliação (amarelo) com a percepção do gestor (azul).',
-            styles['body'],
-        ))
-        story.append(Spacer(1, 10))
-        img = Image(radar_buf, width=14*cm, height=14*cm)
-        img.hAlign = 'CENTER'
-        story.append(img)
-
-    story.append(PageBreak())
-    story.append(Paragraph('Detalhamento por Critério', styles['h1']))
-    story.append(Paragraph(
-        'Detalhamento individual de cada critério avaliado, com notas atribuídas pela autoavaliação, pelo gestor e a nota consolidada.',
-        styles['body'],
-    ))
-    story.append(Spacer(1, 8))
-
-    detail_data = [['Competência', 'Critério avaliado', 'Auto', 'Gestor', 'Final']]
+    story.append(Paragraph('Detalhamento por critério', styles['h2']))
+    detail_data = [['Competência', 'Pergunta', 'Auto', 'Gestor', 'Final']]
     for item in summary['rows']:
         detail_data.append([
             Paragraph(f"<b>{safe_text(item['question'].category)}</b>", styles['small']),
@@ -1130,158 +1032,77 @@ def report_pdf(assignment_id):
             str(item['manager'].score if item['manager'] else '-'),
             f"{item['final_score']:.1f}" if item['final_score'] is not None else '-',
         ])
-    detail_table = Table(detail_data, colWidths=[3.0*cm, 8.5*cm, 1.4*cm, 1.7*cm, 1.7*cm], repeatRows=1)
-    detail_style = [
+    detail_table = Table(detail_data, colWidths=[3*cm, 8.5*cm, 1.6*cm, 1.8*cm, 1.8*cm], repeatRows=1)
+    detail_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), primary),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 10),
         ('GRID', (0, 0), (-1, -1), 0.35, colors.HexColor('#cbd5e1')),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('ALIGN', (2, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('ALIGN', (2, 1), (-1, -1), 'CENTER'),
         ('TOPPADDING', (0, 0), (-1, -1), 6),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-    ]
-    for i, item in enumerate(summary['rows'], start=1):
-        if i % 2 == 0:
-            detail_style.append(('BACKGROUND', (0, i), (-1, i), light))
-        if item['final_score'] is not None:
-            color_hex = score_color_hex(item['final_score'])
-            detail_style.append(('TEXTCOLOR', (4, i), (4, i), colors.HexColor(color_hex)))
-            detail_style.append(('FONTNAME', (4, i), (4, i), 'Helvetica-Bold'))
-    detail_table.setStyle(TableStyle(detail_style))
+    ]))
     story.append(detail_table)
-
-    if history_data:
-        story.append(PageBreak())
-        story.append(Paragraph('Histórico de Ciclos Anteriores', styles['h1']))
-        story.append(Paragraph(
-            'Evolução do desempenho do colaborador ao longo dos ciclos anteriores de avaliação 180°.',
-            styles['body'],
-        ))
-        story.append(Spacer(1, 10))
-
-        history_buf = generate_history_chart(history_data, summary['final_avg'])
-        if history_buf:
-            img = Image(history_buf, width=16*cm, height=8*cm)
-            img.hAlign = 'CENTER'
-            story.append(img)
-            story.append(Spacer(1, 14))
-
-        hist_data = [['Ciclo', 'Encerramento', 'Auto', 'Gestor', 'Final']]
-        for h in history_data:
-            hist_data.append([
-                h['cycle'],
-                h['date'].strftime('%d/%m/%Y'),
-                f"{h['employee_avg']:.2f}",
-                f"{h['manager_avg']:.2f}",
-                f"{h['final_avg']:.2f}",
-            ])
-        hist_data.append([
-            assignment.cycle.name + ' (atual)',
-            assignment.cycle.end_date.strftime('%d/%m/%Y'),
-            f"{summary['employee_avg']:.2f}",
-            f"{summary['manager_avg']:.2f}",
-            f"{summary['final_avg']:.2f}",
-        ])
-        hist_table = Table(hist_data, colWidths=[6*cm, 3*cm, 2.3*cm, 2.3*cm, 2.3*cm], repeatRows=1)
-        hist_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), primary),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('BACKGROUND', (0, -1), (-1, -1), secondary),
-            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-            ('GRID', (0, 0), (-1, -1), 0.35, colors.HexColor('#cbd5e1')),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
-            ('TOPPADDING', (0, 0), (-1, -1), 6),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-        ]))
-        story.append(hist_table)
-
     story.append(PageBreak())
-    story.append(Paragraph('Feedback Consolidado', styles['h1']))
-    feedback_blocks = (feedback.editable_feedback or '').split('\n\n')
+
+    story.append(Paragraph('Feedback consolidado', styles['h2']))
+    feedback_blocks = (feedback.editable_feedback or '').split('\\n\\n')
+    if not [b for b in feedback_blocks if b.strip()]:
+        feedback_blocks = ['Nenhum feedback adicional foi registrado até o momento.']
     for block in feedback_blocks:
         if block.strip():
             story.append(Paragraph(safe_paragraph_text(block), styles['body']))
             story.append(Spacer(1, 8))
 
-    if feedback.manager_comments:
-        story.append(Spacer(1, 6))
-        story.append(Paragraph('Comentários do Gestor', styles['h2']))
-        story.append(Paragraph(safe_paragraph_text(feedback.manager_comments), styles['body']))
-
-    story.append(PageBreak())
-    story.append(Paragraph('Plano de Desenvolvimento Individual (PDI)', styles['h1']))
-    story.append(Paragraph(
-        'Plano estruturado de desenvolvimento com objetivos, ações, indicadores e prazos 30 / 60 / 90 dias.',
-        styles['body'],
-    ))
-    story.append(Spacer(1, 10))
-
-    timeline_data = [[
-        Paragraph('<b>30 DIAS</b><br/><font size="9">Aprendizado e prática inicial</font>', styles['metric_lbl']),
-        Paragraph('<b>60 DIAS</b><br/><font size="9">Aplicação e consistência</font>', styles['metric_lbl']),
-        Paragraph('<b>90 DIAS</b><br/><font size="9">Avaliação e consolidação</font>', styles['metric_lbl']),
-    ]]
-    timeline_table = Table(timeline_data, colWidths=[6*cm, 6*cm, 6*cm], rowHeights=[1.4*cm])
-    timeline_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (0, 0), colors.HexColor('#16a34a')),
-        ('BACKGROUND', (1, 0), (1, 0), colors.HexColor('#ca8a04')),
-        ('BACKGROUND', (2, 0), (2, 0), primary),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-    ]))
-    story.append(timeline_table)
-    story.append(Spacer(1, 14))
-
-    pdi_blocks = (feedback.editable_pdi or '').split('\n\n')
+    story.append(Paragraph('PDI', styles['h2']))
+    pdi_blocks = (feedback.editable_pdi or '').split('\\n\\n')
+    if not [b for b in pdi_blocks if b.strip()]:
+        pdi_blocks = ['Nenhum plano de desenvolvimento foi registrado até o momento.']
     for block in pdi_blocks:
         if block.strip():
             story.append(Paragraph(safe_paragraph_text(block), styles['body_left']))
             story.append(Spacer(1, 8))
 
-    story.append(PageBreak())
-    story.append(Paragraph('Validação do Plano', styles['h1']))
-    story.append(Paragraph(
-        'Documento ciente e validado pelas partes envolvidas. As assinaturas formalizam o '
-        'compromisso com o plano de desenvolvimento descrito.',
-        styles['body'],
-    ))
-    story.append(Spacer(1, 40))
+    if feedback.manager_comments:
+        story.append(Paragraph('Comentários do gestor', styles['h2']))
+        story.append(Paragraph(safe_paragraph_text(feedback.manager_comments), styles['body']))
+        story.append(Spacer(1, 8))
 
-    signature_line = '_' * 50
-    sig_data = [
-        [Paragraph(signature_line, styles['body']), Paragraph(signature_line, styles['body'])],
-        [Paragraph(f'<b>{employee_name}</b><br/>Colaborador<br/><font size="8" color="#64748b">{employee_position}</font>', styles['body']),
-         Paragraph(f'<b>{manager_name}</b><br/>Gestor responsável<br/><font size="8" color="#64748b">{manager_position}</font>', styles['body'])],
-        [Spacer(1, 30), Spacer(1, 30)],
-        [Paragraph('Data: ___/___/______', styles['small']), Paragraph('Data: ___/___/______', styles['small'])],
-    ]
-    sig_table = Table(sig_data, colWidths=[(A4[0] - 3*cm)/2, (A4[0] - 3*cm)/2])
-    sig_table.setStyle(TableStyle([
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('TOPPADDING', (0, 0), (-1, -1), 8),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-    ]))
-    story.append(sig_table)
-    story.append(Spacer(1, 50))
+    if history_data:
+        story.append(Paragraph('Histórico de ciclos anteriores', styles['h2']))
+        history_table_data = [['Ciclo', 'Encerramento', 'Auto', 'Gestor', 'Final']]
+        for h in history_data:
+            history_table_data.append([
+                safe_text(h['cycle']),
+                h['date'].strftime('%d/%m/%Y'),
+                f"{h['employee_avg']:.2f}",
+                f"{h['manager_avg']:.2f}",
+                f"{h['final_avg']:.2f}",
+            ])
+        history_table = Table(history_table_data, colWidths=[7*cm, 3*cm, 2*cm, 2*cm, 2*cm], repeatRows=1)
+        history_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), primary),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('GRID', (0, 0), (-1, -1), 0.35, colors.HexColor('#cbd5e1')),
+            ('ALIGN', (1, 1), (-1, -1), 'CENTER'),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ]))
+        story.append(history_table)
+        story.append(Spacer(1, 10))
+
     story.append(Paragraph(
         f'<i>Documento gerado eletronicamente pelo sistema de RH 180° em {datetime.utcnow().strftime("%d/%m/%Y às %H:%M")}.</i>',
         styles['small'],
     ))
-    story.append(Paragraph(
-        f'<i>{safe_text(brand_name)} • Confidencial • Uso interno exclusivo da liderança de RH.</i>',
-        styles['small'],
-    ))
 
     try:
-        doc.build(story, onFirstPage=lambda c, d: None, onLaterPages=page_decorator)
+        doc.build(story, onFirstPage=page_decorator, onLaterPages=page_decorator)
     except Exception:
-        app.logger.exception('Erro ao gerar relatório PDF')
-        flash('Não foi possível gerar o relatório PDF. Revise os textos do feedback e tente novamente.', 'danger')
+        app.logger.exception('Erro ao gerar relatório PDF simplificado')
+        flash('Não foi possível gerar o relatório PDF.', 'danger')
         return redirect(url_for('feedback_view', assignment_id=assignment.id))
 
     buffer.seek(0)
