@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-xl-8 col-lg-10">
+    <div class="panel-card">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div>
+          <div class="kicker">Cadastro de colaboradores</div>
+          <h4 class="mb-0">Editar colaborador</h4>
+        </div>
+        <a href="{{ url_for('employees') }}" class="btn btn-outline-secondary">Voltar</a>
+      </div>
+
+      <form method="post" class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Nome completo</label>
+          <input class="form-control" name="name" value="{{ employee.name }}" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">E-mail</label>
+          <input type="email" class="form-control" name="email" value="{{ employee.email }}" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Departamento</label>
+          <input class="form-control" name="department" value="{{ employee.department }}" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Cargo</label>
+          <input class="form-control" name="position" value="{{ employee.position }}" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Unidade</label>
+          <select class="form-select" name="unit" required>
+            <option value="Posto do Boi" {% if employee.unit == 'Posto do Boi' %}selected{% endif %}>Posto do Boi</option>
+            <option value="Express do Boi" {% if employee.unit == 'Express do Boi' %}selected{% endif %}>Express do Boi</option>
+            <option value="Matriz" {% if employee.unit == 'Matriz' %}selected{% endif %}>Matriz</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Data de admissão</label>
+          <input type="date" class="form-control" name="admission_date" value="{{ employee.admission_date.strftime('%Y-%m-%d') if employee.admission_date else '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Gestor responsável</label>
+          <select class="form-select" name="manager_id" required>
+            {% for manager in managers %}
+              <option value="{{ manager.id }}" {% if employee.manager_id == manager.id %}selected{% endif %}>{{ manager.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Nova senha</label>
+          <input class="form-control" name="password" placeholder="Deixe em branco para manter a senha atual">
+          <div class="form-text">Se você não preencher este campo, a senha atual será mantida.</div>
+        </div>
+        <div class="col-12 text-end">
+          <button type="submit" class="btn btn-brand">Salvar alterações</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

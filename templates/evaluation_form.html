@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="panel-card mb-4">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+      <div class="kicker">{{ 'Autoavaliação' if mode == 'employee' else 'Avaliação do gestor' }}</div>
+      <h3 class="mb-1">{{ assignment.employee.name }}</h3>
+      <div class="subtle">Ciclo {{ assignment.cycle.name }} • {{ assignment.employee.position }} • {{ assignment.employee.unit }}</div>
+    </div>
+    <div class="text-end">
+      <div class="kicker">Como avaliar</div>
+      <div class="subtle small">Clique nas <span style="color:#FFCC00;">★</span> para atribuir a nota (1 a 5)</div>
+    </div>
+  </div>
+  <div class="mt-3 d-flex flex-wrap gap-2 small">
+    <span class="badge bg-light text-dark border">⭐ 1 — Muito abaixo</span>
+    <span class="badge bg-light text-dark border">⭐⭐ 2 — Precisa melhorar</span>
+    <span class="badge bg-light text-dark border">⭐⭐⭐ 3 — Atende</span>
+    <span class="badge bg-light text-dark border">⭐⭐⭐⭐ 4 — Supera</span>
+    <span class="badge bg-light text-dark border">⭐⭐⭐⭐⭐ 5 — Referência</span>
+  </div>
+</div>
+
+<form method="post" class="d-grid gap-3" id="evalForm">
+  {% for question in questions %}
+    {% set item = existing.get(question.id) %}
+    <div class="panel-card eval-question-card">
+      <div class="d-flex justify-content-between align-items-start gap-3 mb-3 flex-wrap">
+        <div style="flex:1; min-width:260px;">
+          <div class="kicker">{{ question.category }}</div>
+          <h5 class="mb-1">{{ question.text }}</h5>
+          {% if question.expected_behavior %}
+            <div class="subtle small">💡 Esperado: {{ question.expected_behavior }}</div>
+          {% endif %}
+        </div>
+        <span class="score-pill score-mid">Critério {{ loop.index }} de {{ questions|length }}</span>
+      </div>
+
+      <div class="star-rating-container mb-3">
+        <label class="form-label mb-2"><strong>Nota atribuída:</strong></label>
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+          <div class="star-rating" data-question-id="{{ question.id }}">
+            {% for star in range(1, 6) %}
+              <span class="star" data-value="{{ star }}" role="button" tabindex="0"
+                    aria-label="Atribuir {{ star }} estrela{{ 's' if star > 1 else '' }}">★</span>
+            {% endfor %}
+          </div>
+          <input type="hidden" name="score_{{ question.id }}" id="score_{{ question.id }}"
+                 value="{{ item.score if item else '' }}" required>
+          <span class="star-label" id="label_{{ question.id }}">
+            {% if item %}
+              <strong style="color: var(--brand-primary);">{{ item.score }}/5</strong> —
+              {% if item.score == 1 %}Muito abaixo
+              {% elif item.score == 2 %}Precisa melhorar
+              {% elif item.score == 3 %}Atende
+              {% elif item.score == 4 %}Supera
+              {% elif item.score == 5 %}Referência
+              {% endif %}
+            {% else %}
+              <span class="subtle">Clique nas estrelas</span>
+            {% endif %}
+          </span>
+        </div>
+      </div>
+
+      <div>
+        <label class="form-label"><strong>Comentário / exemplos observados:</strong></label>
+        <textarea class="form-control" name="comment_{{ question.id }}"
+                  placeholder="Campo opcional. Se quiser, descreva exemplos concretos observados neste critério...">{{ item.comment if item else '' }}</textarea>
+        <div class="form-text">Comentário opcional. Apenas a nota em estrelas é obrigatória.</div>
+      </div>
+    </div>
+  {% endfor %}
+
+  <div class="text-end sticky-bottom-bar">
+    <a href="{{ url_for('manager_dashboard' if current_user.role == 'manager' else 'employee_dashboard') }}"
+       class="btn btn-outline-secondary me-2">Cancelar</a>
+    <button type="submit" class="btn btn-brand btn-lg" id="submitBtn">
+      <i class="bi bi-check2-circle"></i> Salvar avaliação
+    </button>
+  </div>
+</form>
+
+<style>
+  .star-rating {
+    display: inline-flex;
+    gap: 4px;
+    font-size: 2.2rem;
+    line-height: 1;
+    user-select: none;
+  }
+  .star {
+    color: #d1d5db;
+    cursor: pointer;
+    transition: transform 0.15s ease, color 0.15s ease;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  }
+  .star:hover {
+    transform: scale(1.15);
+  }
+  .star.active {
+    color: #FFCC00;
+    text-shadow: 0 2px 4px rgba(255, 204, 0, 0.4);
+  }
+  .star.hover-preview {
+    color: #FFE066;
+  }
+  .star-label {
+    font-size: 1rem;
+    color: #475569;
+    min-width: 180px;
+  }
+  .eval-question-card {
+    border-left: 4px solid var(--brand-primary);
+  }
+  .sticky-bottom-bar {
+    position: sticky;
+    bottom: 12px;
+    background: rgba(243, 245, 249, 0.95);
+    backdrop-filter: blur(8px);
+    padding: 16px;
+    border-radius: 14px;
+    margin-top: 16px;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
+  }
+  .star-rating-container {
+    background: #fafbfc;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+  }
+</style>
+
+<script>
+  const ratingLabels = {
+    1: 'Muito abaixo',
+    2: 'Precisa melhorar',
+    3: 'Atende',
+    4: 'Supera',
+    5: 'Referência'
+  };
+
+  document.querySelectorAll('.star-rating').forEach(ratingGroup => {
+    const stars = ratingGroup.querySelectorAll('.star');
+    const questionId = ratingGroup.dataset.questionId;
+    const hiddenInput = document.getElementById(`score_${questionId}`);
+    const labelEl = document.getElementById(`label_${questionId}`);
+
+    function paint(score) {
+      stars.forEach(s => {
+        const v = parseInt(s.dataset.value);
+        s.classList.toggle('active', v <= score);
+        s.classList.remove('hover-preview');
+      });
+    }
+
+    function preview(score) {
+      stars.forEach(s => {
+        const v = parseInt(s.dataset.value);
+        s.classList.toggle('hover-preview', v <= score && !s.classList.contains('active'));
+      });
+    }
+
+    function setLabel(score) {
+      if (score && ratingLabels[score]) {
+        labelEl.innerHTML = `<strong style="color: var(--brand-primary);">${score}/5</strong> — ${ratingLabels[score]}`;
+      } else {
+        labelEl.innerHTML = '<span class="subtle">Clique nas estrelas</span>';
+      }
+    }
+
+    const initial = parseInt(hiddenInput.value) || 0;
+    if (initial) paint(initial);
+
+    stars.forEach(star => {
+      star.addEventListener('click', () => {
+        const score = parseInt(star.dataset.value);
+        hiddenInput.value = score;
+        paint(score);
+        setLabel(score);
+      });
+      star.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          star.click();
+        }
+      });
+      star.addEventListener('mouseenter', () => {
+        preview(parseInt(star.dataset.value));
+      });
+    });
+
+    ratingGroup.addEventListener('mouseleave', () => {
+      const current = parseInt(hiddenInput.value) || 0;
+      paint(current);
+    });
+  });
+
+  document.getElementById('evalForm').addEventListener('submit', (e) => {
+    const inputs = document.querySelectorAll('input[name^="score_"]');
+    let firstMissing = null;
+    inputs.forEach(inp => {
+      if (!inp.value || inp.value === '0') {
+        if (!firstMissing) firstMissing = inp;
+      }
+    });
+    if (firstMissing) {
+      e.preventDefault();
+      alert('Por favor, atribua uma nota (estrelas) para todas as perguntas antes de salvar.');
+      const card = firstMissing.closest('.eval-question-card');
+      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  });
+</script>
+{% endblock %}
